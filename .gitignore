@@ -8,6 +8,7 @@ __pycache__/
 
 # Distribution / packaging
 .Python
+san_mrc/
 data/
 build/
 develop-eggs/
