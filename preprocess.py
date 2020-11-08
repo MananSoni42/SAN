@@ -9,73 +9,6 @@ import numpy as np
 
 from utils import *
 
-class Vocabulary(object):
-    ''' Class to handle vocabulary conversions (taken from author's code)'''
-    INIT_LEN = 4
-    def __init__(self, neat=False):
-        self.neat = neat
-        if not neat:
-            self.tok2ind = {PAD: PAD_ID, UNK: UNK_ID, STA: STA_ID, END: END_ID}
-            self.ind2tok = {PAD_ID: PAD, UNK_ID: UNK, STA_ID: STA, END_ID:END}
-        else:
-            self.tok2ind = {}
-            self.ind2tok = {}
-
-    def __len__(self):
-        return len(self.tok2ind)
-
-    def __iter__(self):
-        return iter(self.tok2ind)
-
-    def __contains__(self, key):
-        if type(key) == int:
-            return key in self.ind2tok
-        elif type(key) == str:
-            return key in self.tok2ind
-
-    def __getitem__(self, key):
-        if type(key) == int:
-            return self.ind2tok.get(key, -1) if self.neat else self.ind2tok.get(key, UNK)
-        if type(key) == str:
-            return self.tok2ind.get(key, None) if self.neat else self.tok2ind.get(key,self.tok2ind.get(UNK))
-
-    def __setitem__(self, key, item):
-        if type(key) == int and type(item) == str:
-            self.ind2tok[key] = item
-        elif type(key) == str and type(item) == int:
-            self.tok2ind[key] = item
-        else:
-            raise RuntimeError('Invalid (key, item) types.')
-
-    def add(self, token):
-        if token not in self.tok2ind:
-            index = len(self.tok2ind)
-            self.tok2ind[token] = index
-            self.ind2tok[index] = token
-
-    def get_vocab_list(self, with_order=True):
-        if with_order:
-            words = [self[k] for k in range(0, len(self))]
-        else:
-            words = [k for k in self.tok2ind.keys()
-                      if k not in {PAD, UNK, STA, END}]
-        return words
-
-    def toidx(self, tokens):
-        return [self[tok] for tok in tokens]
-
-    def copy(self):
-        new_vocab = Vocabulary(self.neat)
-        for w in self:
-            new_vocab.add(w)
-        return new_vocab
-
-    def build(words, neat=False):
-        vocab = Vocabulary(neat)
-        for w in words: vocab.add(w)
-        return vocab
-
-
 def normalize_text(text):
     return unicodedata.normalize('NFD', text)
 
@@ -195,6 +128,18 @@ def build_embedding(fname, vocab, dim):
                 emb[vocab[token]] = [float(v) for v in elems[-dim:]]
     return emb
 
+def postag_func(toks, vocab):
+    return [vocab[w.tag_] for w in toks if len(w.text) > 0]
+
+def nertag_func(toks, vocab):
+    return [vocab['{}_{}'.format(w.ent_type_, w.ent_iob_)] for w in toks if len(w.text) > 0]
+
+def tok_func(toks, vocab, doc_toks=None):
+    return [vocab[w.text] for w in toks if len(w.text) > 0]
+
+def raw_txt_func(toks):
+    return [w.text for w in toks if len(w.text) > 0]
+
 def match_func(question, context):
     ''' return exact match (to a question token) for each word in the context '''
     counter = Counter(w.text.lower() for w in context)
@@ -265,14 +210,14 @@ def feature_func(sample, query_tokend, doc_tokend, vocab, vocab_tag, vocab_ner, 
     fea_dict['end'] = end
     return fea_dict
 
-def build_data(data, vocab, vocab_tag, vocab_ner, fout, NLP, is_train, batch_size=4096, threads=16):
+def build_data(data, vocab, vocab_tag, vocab_ner, fout, NLP, is_train, batch_size=4096, threads=24):
     print('Tokenize document')
     passages = [reform_text(sample['context']) for sample in data]
-    passage_tokened = [doc for doc in NLP.pipe(passages, batch_size=batch_size, n_threads=threads)]
+    passage_tokened = [doc for doc in tqdm(NLP.pipe(passages, batch_size=batch_size, n_threads=threads))]
 
     print('Tokenize question')
     question_list = [reform_text(sample['question']) for sample in data]
-    question_tokened = [question for question in NLP.pipe(question_list, batch_size=batch_size, n_threads=threads)]
+    question_tokened = [question for question in tqdm(NLP.pipe(question_list, batch_size=batch_size, n_threads=threads))]
     dropped_sample = 0
 
     print(f'Writing to {fout}')
@@ -281,6 +226,7 @@ def build_data(data, vocab, vocab_tag, vocab_ner, fout, NLP, is_train, batch_siz
             feat_dict = feature_func(sample, question_tokened[idx], passage_tokened[idx], vocab, vocab_tag, vocab_ner, is_train)
             if feat_dict is not None:
                 writer.write('{}\n'.format(json.dumps(feat_dict)))
+            else:
                 dropped_sample += 1
 
     print('dropped {} in total {}'.format(dropped_sample, len(data)))
