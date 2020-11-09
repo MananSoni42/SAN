@@ -1,6 +1,7 @@
-#print("hello")
 '''
 Lexicon encoding layer
+Created October, 2017
+Author: xiaodl@microsoft.com
 '''
 
 import torch
@@ -10,90 +11,13 @@ from torch.autograd import Variable
 import torch.nn.functional as F
 from torch.nn.utils import weight_norm
 from .recurrent import BRNNEncoder, ContextualEmbed
-#from .dropout_wrapper import DropoutWrapper
+from .dropout_wrapper import DropoutWrapper
 from .common import activation
 from .similarity import AttentionWrapper
-#from .sub_layers import PositionwiseNN
-from torch.nn.parameter import Parameter
+from .sub_layers import PositionwiseNN
 from allennlp.modules.elmo import Elmo
-from .my_optim import weight_norm as WN
-
-
-class BRNNEncoder(nn.Module):
-    def __init__(self, input_size, hidden_size, prefix='rnn', opt={}, dropout=None):
-        super(BRNNEncoder, self).__init__()
-        self.opt = opt
-        self.dropout = dropout
-        self.cell_type = opt.get('{}_cell'.format(self.prefix), 'gru').upper()
-        self.weight_norm_on = opt.get('{}_weight_norm_on'.format(self.prefix), False)
-        self.top_layer_only = opt.get('{}_top_layer_only'.format(self.prefix), False)
-        self.num_layers = opt.get('{}_num_layers'.format(self.prefix), 1)
-        self.rnn = getattr(nn, self.cell_type, default=nn.GRU)(input_size, hidden_size, self.num_layers, bidirectional=True)
-        if self.weight_norm_on:
-            self.rnn = WN(self.rnn)
-        if self.top_layer_only:
-            self.output_size = hidden_size * 2
-        else:
-            self.output_size = self.num_layers * hidden_size * 2
-
-    def forward(self, x, x_mask):
-        x = self.dropout(x)
-        _, h = self.rnn(x.transpose(0, 1).contiguous())
-        if self.cell_type == 'lstm':
-            h = h[0]
-        shape = h.size()
-        h = h.view(self.num_layers, 2, shape[1], shape[3]).transpose(1,2).contiguous()
-        h = h.view(self.num_layers, shape[1], 2 * shape[3])
-        if self.top_layer_only:
-            return h[-1]
-        else:
-            return h.transose(0, 1).contiguous().view(x.size(0), -1)
-
-
-class PositionwiseNN(nn.Module):
-    def __init__(self, idim, hdim, dropout=None):
-        super(PositionwiseNN, self).__init__()
-        self.w_0 = nn.Conv1d(idim, hdim, 1)
-        self.w_1 = nn.Conv1d(hdim, hdim, 1)
-        self.dropout = dropout
-
-    def forward(self, x):
-        output = F.relu(self.w_0(x.transpose(1, 2)))
-        output = self.dropout(output)
-        output = self.w_1(output)
-        output = self.dropout(output).transpose(2, 1)
-        return output
-
-class DropoutWrapper(nn.Module):
-    """
-    This is a dropout wrapper which supports the fix mask dropout
-    by: xiaodl
-    """
-    def __init__(self, dropout_p=0, enable_vbp=True):
-        super(DropoutWrapper, self).__init__()
-        """variational dropout means fix dropout mask
-        ref: https://discuss.pytorch.org/t/dropout-for-rnns/633/11
-        """
-        self.enable_variational_dropout = enable_vbp
-        self.dropout_p = dropout_p
-
-    def forward(self, x):
-        """
-            :param x: batch * len * input_size
-        """
-        if self.training == False or self.dropout_p == 0:
-            return x
-
-        if len(x.size()) == 3:
-            mask = Variable(1.0 / (1-self.dropout_p) * torch.bernoulli((1-self.dropout_p) * (x.data.new(x.size(0), x.size(2)).zero_() + 1)), requires_grad=False)
-            return mask.unsqueeze(1).expand_as(x) * x
-        else:
-            return F.dropout(x, p=self.dropout_p, training=self.training)
-
-
 
 class LexiconEncoder(nn.Module):
-    
     def create_embed(self, vocab_size, embed_dim, padding_idx=0):
         return nn.Embedding(vocab_size, embed_dim, padding_idx=padding_idx)
 
@@ -127,17 +51,13 @@ class LexiconEncoder(nn.Module):
         self.ner_embedding = self.create_embed(vocab_size, embed_dim)
         return embed_dim
 
-    #fwhy?
     def create_cove(self, vocab_size, embedding=None, embed_dim=300, padding_idx=0, opt=None):
         self.ContextualEmbed= ContextualEmbed(opt['covec_path'], opt['vocab_size'], embedding=embedding, padding_idx=padding_idx)
         return self.ContextualEmbed.output_size
 
-
-    # for contextual layer
     def create_prealign(self, x1_dim, x2_dim, opt={}, prefix='prealign'):
         self.prealign = AttentionWrapper(x1_dim, x2_dim, prefix, opt, self.dropout)
 
-    '''
     def create_elmo(self, opt):
         elmo_on = opt.get('elmo_on', False)
         num_layer = opt['contextual_num_layers']
@@ -151,7 +71,6 @@ class LexiconEncoder(nn.Module):
             self.elmo = None
             size = 0
         return size
-    '''
 
     def __init__(self, opt, pwnn_on=True, embedding=None, padding_idx=0, dropout=None):
         super(LexiconEncoder, self).__init__()
@@ -183,7 +102,6 @@ class LexiconEncoder(nn.Module):
 
         doc_hidden_size = embedding_dim + covec_size + prealign_size + pos_size + ner_size + feat_size
         que_hidden_size = embedding_dim + covec_size
-
         if opt['prealign_bidi']:
             que_hidden_size += prealign_size
         self.pwnn_on = pwnn_on
