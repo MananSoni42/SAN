@@ -1,12 +1,23 @@
 import spacy
 from pprint import pprint
 import os
+import argparse
 from utils.preprocess_func import load_data, load_emb_vocab, build_vocab, build_embedding, build_data
 from utils.preprocess_utils import *
 
-#path_to_glove = 'data/glove.6B.300d.txt'
-path_to_glove = 'data/glove.840B.300d.txt'
-data_dir = './data/'
+parser = argparse.ArgumentParser()
+parser.add_argument('--glove_path', type=str, default='data/glove.840B.300d.txt',
+                    help='Path to stored glove vectors')
+parser.add_argument('--data_dir', type=str, default='./data',
+                    help='Path to raw dataset, new dataset is written here')
+parser.add_argument('--embedding_dim', type=int, default=300,
+                    help='Dimensions to use for GLoVE embeddings')
+
+args = parser.parse_args()
+
+path_to_glove = args.path_to_glove
+data_dir = args.data_dir
+EMBED_DIM = args.embedding_dim
 
 NLP = spacy.load('en', disable=['vectors', 'textcat', 'parser'])
 

@@ -1,3 +1,23 @@
+# SAN
+Stochastic answering network for Squad 2.0
+
+## Objectives
+* [ ] Reproduce results of the joint SAN and joint SAN + classifier. (Note the training of these models is the same so computationally, it shouldn’t be very expensive to reproduce both results as compared to just one.)
+* [ ] Plot Lspan, Lclassifier, and overall loss and also training accuracy and f1 with epochs.
+* [ ] Reproduce the classifier accuracy.
+* [ ] Report other metrics - precision, recall, accuracy f1 for joint, joint+classifier, and on classifier alone as well.
+* [ ] Experiment with different lambdas in the loss function and see how accuracy of classifier changes. (In case this gets computationally very expensive, we can discuss what to do about it later)
+
+## Modules
+* [x] ```preprocess.py```: Pre-processes the entire dataset
+* [ ] ```lexicon_embed.py```
+* [ ] ```contextual_embed.py```
+* [ ] ```mem.py```
+* [ ] ```san.py```
+* [ ] ```classifier.py```
+* [ ] ```train.py```
+* [ ] ```plot_graphs.py```
+
 # Stochastic Answer Networks for Machine Reading Comprehension
 
 This PyTorch package implements the Stochastic Answer Network (SAN) for Machine Reading Comprehension, as described in:
@@ -14,15 +34,15 @@ Technical Report
 [arXiv version](https://arxiv.org/abs/1809.09194)
 
 
-Please cite the above papers if you use this code. 
+Please cite the above papers if you use this code.
 
-## Quickstart 
+## Quickstart
 
 ### Setup Environment
 1. python3.6
 2. install requirements:
    > pip install -r requirements.txt
-3. download data/word2vec 
+3. download data/word2vec
    > sh download.sh
 4. You might need to download the en module for spacy
    > python -m spacy download en              # default English model (~50MB) <br/>
@@ -70,5 +90,3 @@ We report results produced by this package as follows.
 Related:
 1. <a href="https://arxiv.org/abs/1809.06963">Multi-Task Learning for MRC</a>
 2. <a href="https://arxiv.org/abs/1804.07888">NLI</a>
-
-

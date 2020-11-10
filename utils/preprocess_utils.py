@@ -10,8 +10,9 @@ UNK_ID = 1
 STA_ID = 2
 END_ID = 3
 
-EMBED_DIM = 300
 version = 'v1'
+def normalize_text(text):
+    return unicodedata.normalize('NFD', text)
 
 def reform_text(text):
     '''
@@ -62,6 +63,9 @@ class Vocabulary(object):
             raise RuntimeError('Invalid (key, item) types.')
 
     def add(self, token):
+        '''
+        add a single token if it does not exist in Vocab
+        '''
         if token not in self.tok2ind:
             index = len(self.tok2ind)
             self.tok2ind[token] = index

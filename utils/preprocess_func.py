@@ -9,11 +9,12 @@ import numpy as np
 
 from .preprocess_utils import *
 
-def normalize_text(text):
-    return unicodedata.normalize('NFD', text)
-
 def load_data(fname, train):
-    ''' load data from Squad 2.0 '''
+    '''
+    load data from Squad 2.0
+    Returns a list of rows, each containing a dictionary with keys:
+    uid, context, question, answer, answer_start, answer_end
+    '''
     rows = []
     with open(fname, encoding="utf8") as f:
         data = json.load(f)['data']
@@ -37,11 +38,13 @@ def load_data(fname, train):
                 else:
                     row = {'uid': uid, 'context': context, 'question': question, 'answer': answers, 'answer_start': -1, 'answer_end':-1}
                 rows.append(row)
-
     return rows
 
 def load_emb_vocab(fname, dim):
-    ''' load the glove embeddings '''
+    '''
+    load the glove embeddings
+    Returns a set of words
+    '''
     vocab = set()
     with open(fname, encoding='utf-8') as f:
         next(f) # skip header
@@ -52,7 +55,9 @@ def load_emb_vocab(fname, dim):
     return vocab
 
 def build_vocab(data, glove_vocab, sort_all, batch_size=4096, threads=24):
-
+    '''
+    Returns vocabulary objects for all words, PoS tags and NER tags
+    '''
     nlp = spacy.load('en', disable=['vectors', 'textcat', 'parser'])
 
     # docs
@@ -115,7 +120,10 @@ def build_vocab(data, glove_vocab, sort_all, batch_size=4096, threads=24):
     return vocab, tag_vocab, ner_vocab
 
 def build_embedding(fname, vocab, dim):
-    ''' Build word embeddings for each word in vocabulary '''
+    '''
+    Build word embeddings for each word in vocabulary
+    Returns a 2-d matrix of size vocab_size x embedding_dim
+    '''
     vocab_size = len(vocab)
     emb = np.zeros((vocab_size, dim))
     emb[0] = 0
@@ -155,6 +163,7 @@ def match_func(question, context):
     return features
 
 def build_span(context, answer, context_token, answer_start, answer_end, is_train=True):
+    ''' Returns the exact answer span as a tuple '''
     p_str = 0
     p_token = 0
     t_start, t_end, t_span = -1, -1, []
@@ -180,6 +189,7 @@ def build_span(context, answer, context_token, answer_start, answer_end, is_trai
         return (t_start, t_end, t_span)
 
 def feature_func(sample, query_tokend, doc_tokend, vocab, vocab_tag, vocab_ner, is_train):
+    ''' Builds all features (seperately) and returns a dict with all of them '''
     # features
     fea_dict = {}
     fea_dict['uid'] = sample['uid']
@@ -211,6 +221,9 @@ def feature_func(sample, query_tokend, doc_tokend, vocab, vocab_tag, vocab_ner, 
     return fea_dict
 
 def build_data(data, vocab, vocab_tag, vocab_ner, fout, NLP, is_train, batch_size=4096, threads=24):
+    '''
+    Builds the final dataset (feature dictionary) and writes it to fout
+    '''
     print('Tokenize document')
     passages = [reform_text(sample['context']) for sample in data]
     passage_tokened = [doc for doc in tqdm(NLP.pipe(passages, batch_size=batch_size, n_threads=threads))]
