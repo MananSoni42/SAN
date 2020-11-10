@@ -5,7 +5,7 @@
 # by xiaodl@microsoft.com
 ###############################
 
-DATA_DIR=$(pwd)/data
+DATA_DIR="./data"
 echo $DATA_DIR
 mkdir $DATA_DIR
 
