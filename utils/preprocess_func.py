@@ -63,12 +63,12 @@ def build_vocab(data, glove_vocab, sort_all, batch_size=4096, threads=24):
     # docs
     print('Tokenizing docs')
     docs = [reform_text(row['context']) for row in data]
-    doc_tokened = list(tqdm(nlp.pipe(docs, batch_size=batch_size, n_threads=threads)))
+    doc_tokened = list(nlp.pipe(docs, batch_size=batch_size, n_threads=threads))
 
     #questions
     print('Tokenizing questions')
     questions = [reform_text(sample['question']) for sample in data]
-    questions_tokened = list(tqdm(nlp.pipe(questions, batch_size=batch_size, n_threads=threads)))
+    questions_tokened = list(nlp.pipe(questions, batch_size=batch_size, n_threads=threads))
 
     tag_counter = Counter()
     ner_counter = Counter()
@@ -226,11 +226,11 @@ def build_data(data, vocab, vocab_tag, vocab_ner, fout, NLP, is_train, batch_siz
     '''
     print('Tokenize document')
     passages = [reform_text(sample['context']) for sample in data]
-    passage_tokened = [doc for doc in tqdm(NLP.pipe(passages, batch_size=batch_size, n_threads=threads))]
+    passage_tokened = [doc for doc in NLP.pipe(passages, batch_size=batch_size, n_threads=threads)]
 
     print('Tokenize question')
     question_list = [reform_text(sample['question']) for sample in data]
-    question_tokened = [question for question in tqdm(NLP.pipe(question_list, batch_size=batch_size, n_threads=threads))]
+    question_tokened = [question for question in NLP.pipe(question_list, batch_size=batch_size, n_threads=threads)]
     dropped_sample = 0
 
     print(f'Writing to {fout}')

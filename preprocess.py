@@ -15,7 +15,7 @@ parser.add_argument('--embedding_dim', type=int, default=300,
 
 args = parser.parse_args()
 
-path_to_glove = args.path_to_glove
+path_to_glove = args.glove_path
 data_dir = args.data_dir
 EMBED_DIM = args.embedding_dim
 

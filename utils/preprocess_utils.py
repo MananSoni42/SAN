@@ -1,4 +1,5 @@
 import re
+import unicodedata
 
 PAD = 'PADPAD'
 UNK = 'UNKUNK'
