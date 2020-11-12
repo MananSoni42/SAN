@@ -41,8 +41,9 @@ def main():
     logger.info('Launching the SAN')
     opt = vars(args)
     logger.info('Loading data')
-    version = 'v1'
-    gold_version = 'v1.1'
+
+    version = 'v2' if args.v2_on else 'v1.1'
+    gold_version = 'v2.0' if args.v2_on else 'v1.1'
 
     dev_path = gen_name(args.data_dir, args.dev_data, version)
     dev_gold_path = gen_gold_name(args.data_dir, args.dev_gold, gold_version)
@@ -50,10 +51,7 @@ def main():
     test_path = gen_name(args.data_dir, args.test_data, version)
     test_gold_path = gen_gold_name(args.data_dir, args.test_gold, gold_version)
 
-    if args.v2_on:
-        version = 'v2'
-        gold_version = 'v2.0'
-        dev_labels = load_squad_v2_label(args.dev_gold)
+    dev_labels = load_squad_v2_label(dev_gold_path)
 
     embedding, opt = load_meta(opt, gen_name(args.data_dir, args.meta, version, suffix='pick'))
     train_data = BatchGen(gen_name(args.data_dir, args.train_data, version),
@@ -96,10 +94,18 @@ def main():
 
     for epoch in range(0, args.epoches):
         logger.warning('At epoch {}'.format(epoch))
+
+        loss, loss_san, loss_class = 0.0, 0.0, 0.0
+
         train_data.reset()
         start = datetime.now()
         for i, batch in enumerate(train_data):
-            model.update(batch)
+            losses = model.update(batch)
+            loss += losses[0].item()
+            loss_san += losses[1].item()
+            if losses[2]:
+                loss_class += losses[2].item()
+
             if (model.updates) % args.log_per_updates == 0 or i == 0:
                 logger.info('#updates[{0:6}] train loss[{1:.5f}] remaining[{2}]'.format(
                     model.updates, model.train_loss.avg,
@@ -150,7 +156,9 @@ def main():
             best_em_score, best_f1_score = em, f1
             logger.info('Saved the new best model and prediction')
 
-        logger.warning("Epoch {0} - dev EM: {1:.3f} F1: {2:.3f} (best EM: {3:.3f} F1: {4:.3f})".format(epoch, em, f1, best_em_score, best_f1_score))
+        logger.warning("Epoch {0} - dev EM: {1:.3f} F1: {2:.3f} (best EM: {3:.3f} F1: {4:.3f})\
+                        \nTrain loss: {5:.3f} = {6:.3f} + {7:.3f}"
+                        .format(epoch, em, f1, best_em_score, best_f1_score, loss, loss_san, loss_class))
         if args.v2_on:
             logger.warning("Epoch {0} - ACC: {1:.4f}".format(epoch, acc))
         if metric is not None:

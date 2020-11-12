@@ -80,18 +80,21 @@ class DocReaderModel(object):
     def update(self, batch):
         self.network.train()
         if self.opt['cuda']:
-            y = Variable(batch['start'].cuda(async=True)), Variable(batch['end'].cuda(async=True))
+            y = Variable(batch['start'].cuda(non_blocking=True)), Variable(batch['end'].cuda(non_blocking=True))
             if self.opt.get('v2_on', False):
-                label = Variable(batch['label'].cuda(async=True), requires_grad=False)
+                label = Variable(batch['label'].cuda(non_blocking=True), requires_grad=False)
         else:
             y = Variable(batch['start']), Variable(batch['end'])
             if self.opt.get('v2_on', False):
                 label = Variable(batch['label'], requires_grad=False)
 
         start, end, pred = self.network(batch)
-        loss = F.cross_entropy(start, y[0]) + F.cross_entropy(end, y[1])
+        loss_san = F.cross_entropy(start, y[0]) + F.cross_entropy(end, y[1]) # SAN loss
+        loss = loss_san
+        los_class = None
         if self.opt.get('v2_on', False):
-            loss = loss + F.binary_cross_entropy(pred, torch.unsqueeze(label, 1)) * self.opt.get('classifier_gamma', 1)
+            loss_class = F.binary_cross_entropy(pred, torch.unsqueeze(label, 1)) * self.opt.get('classifier_gamma', 1)
+            loss += loss_class
 
         self.train_loss.update(loss.item(), len(start))
         self.optimizer.zero_grad()
@@ -101,6 +104,8 @@ class DocReaderModel(object):
         self.updates += 1
         self.reset_embeddings()
         self.eval_embed_transfer = True
+
+        return loss, loss_san, loss_class
 
     def predict(self, batch, top_k=1):
         self.network.eval()

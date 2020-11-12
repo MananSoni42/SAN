@@ -15,7 +15,7 @@ from .dropout_wrapper import DropoutWrapper
 from .common import activation
 from .similarity import AttentionWrapper
 from .sub_layers import PositionwiseNN
-from allennlp.modules.elmo import Elmo
+#from allennlp.modules.elmo import Elmo
 
 class LexiconEncoder(nn.Module):
     def create_embed(self, vocab_size, embed_dim, padding_idx=0):
@@ -80,6 +80,7 @@ class LexiconEncoder(nn.Module):
         self.dropout_emb = DropoutWrapper(opt['dropout_emb'])
         self.dropout_cove = DropoutWrapper(opt['dropout_cov'])
         self.elmo_size = self.create_elmo(opt)
+        self.elmo_size = 0
 
         # word embedding
         embedding_dim = self.create_word_embed(embedding, opt)
@@ -118,7 +119,7 @@ class LexiconEncoder(nn.Module):
 
     def patch(self, v):
         if self.opt['cuda']:
-            v = Variable(v.cuda(async=True))
+            v = Variable(v.cuda(non_blocking=True))
         else:
             v = Variable(v)
         return v
