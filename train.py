@@ -8,6 +8,7 @@ import argparse
 import json
 import torch
 import numpy as np
+import csv
 from shutil import copyfile
 from datetime import datetime
 from collections import Counter, defaultdict
@@ -45,6 +46,10 @@ def main():
     version = 'v2' if args.v2_on else 'v1.1'
     gold_version = 'v2.0' if args.v2_on else 'v1.1'
 
+    train_path = gen_name(args.data_dir, args.train_data, version)
+    #train_gold_path  = gen_gold_name(args.data_dir, 'train', gold_version) 
+    
+
     dev_path = gen_name(args.data_dir, args.dev_data, version)
     dev_gold_path = gen_gold_name(args.data_dir, args.dev_gold, gold_version)
 
@@ -52,9 +57,10 @@ def main():
     test_gold_path = gen_gold_name(args.data_dir, args.test_gold, gold_version)
 
     dev_labels = load_squad_v2_label(dev_gold_path)
+    #train_labels = load_squad_v2_label(train_gold_path)
 
     embedding, opt = load_meta(opt, gen_name(args.data_dir, args.meta, version, suffix='pick'))
-    train_data = BatchGen(gen_name(args.data_dir, args.train_data, version),
+    train_data = BatchGen(train_path,
                           batch_size=args.batch_size,
                           gpu=args.cuda,
                           with_label=args.v2_on,
@@ -75,6 +81,7 @@ def main():
 
     # load golden standard
     dev_gold = load_squad(dev_gold_path)
+    #train_gold = load_squad(train_gold_path)
 
     if os.path.exists(test_gold_path):
         test_gold = load_squad(test_gold_path)
@@ -92,6 +99,11 @@ def main():
 
     best_em_score, best_f1_score = 0.0, 0.0
 
+    csv_head = ['epoch','train_loss','train_loss_san','train_loss_class','dev_em','dev_f1','dev_acc']
+    csvfile = 'results_{}.csv'.format(args.classifier_gamma)
+    csv_path = os.path.join(args.data_dir, csvfile)
+    result_params = []
+    
     for epoch in range(0, args.epoches):
         logger.warning('At epoch {}'.format(epoch))
 
@@ -110,6 +122,16 @@ def main():
                 logger.info('#updates[{0:6}] train loss[{1:.5f}] remaining[{2}]'.format(
                     model.updates, model.train_loss.avg,
                     str((datetime.now() - start) / (i + 1) * (len(train_data) - i - 1)).split('.')[0]))
+        '''#train eval
+        train_results,train_pred_labels = predict_squad(model,train_data,v2_on=args.v2_on)
+        if args.v2_on:
+            train_metric = evaluate_v2(train_gold, train_results, na_prob_thresh=args.classifier_threshold)
+            train_em, train_f1 = train_metric['exact'], train_metric['f1']
+            train_acc = compute_acc(train_pred_labels, train_labels)
+        else:
+            train_metric = evaluate(dev_gold, results)
+            train_em, train_f1 = train_metric['exact_match'], train_metric['f1']
+        '''
         # dev eval
         results, labels = predict_squad(model, dev_data, v2_on=args.v2_on)
         if args.v2_on:
@@ -124,6 +146,8 @@ def main():
         output_path = os.path.join(model_dir, 'dev_output_{}.json'.format(epoch))
         with open(output_path, 'w') as f:
             json.dump(results, f)
+        
+        
 
         if test_data is not None:
             test_results, test_labels = predict_squad(model, test_data, v2_on=args.v2_on)
@@ -135,11 +159,15 @@ def main():
                 if args.v2_on:
                     test_metric = evaluate_v2(test_gold, test_results, na_prob_thresh=args.classifier_threshold)
                     test_em, test_f1 = test_metric['exact'], test_metric['f1']
-                    test_acc = compute_acc(labels, test_labels)
+                    test_acc = compute_acc(labels, test_labels)#?? should be test_labels,test_gold_labels
                 else:
                     test_metric = evaluate(test_gold, test_results)
                     test_em, test_f1 = test_metric['exact_match'], test_metric['f1']
-
+        
+        '''logger.info('#my params epoch : {} , train_loss : {} , train_loss_san : {} , train_loss_class : {} \
+                        , train_em : {} , train_f1 : {} , train_acc : {}\
+                            /n dev_em : {} , dev_f1 : {}, dev_acc : {}'.format(epoch,loss,loss_san,loss_class,train_em,train_f1,train_acc,em,f1,acc))
+        '''
         # setting up scheduler
         if model.scheduler is not None:
             logger.info('scheduler_type {}'.format(opt['scheduler_type']))
@@ -168,6 +196,15 @@ def main():
             logger.warning("Epoch {0} - test EM: {1:.3f} F1: {2:.3f}".format(epoch, test_em, test_f1))
             if args.v2_on:
                 logger.warning("Epoch {0} - test ACC: {1:.4f}".format(epoch, test_acc))
+
+        
+        #writing in CSV
+        result_params.append([epoch,loss,loss_san,loss_class,em,f1,acc])
+        logger.info('Writing in {} the values {}'.format(csv_path,result_params))
+        with open(csv_path,'w') as csvfile:
+            csvwriter = csv.writer(csvfile)
+            csvwriter.writerow(csv_head)
+            csvwriter.writerows(result_params)
 
 if __name__ == '__main__':
     main()
