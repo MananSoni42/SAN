@@ -151,23 +151,25 @@ def main():
 
         # train eval
         tr_results, tr_labels = predict_squad(model, train_data, v2_on=args.v2_on)
-        if args.v2_on:
+        if args.v2_on and args.classifier_on:
             train_metric = evaluate_v2(train_gold, tr_results, na_prob_thresh=args.classifier_threshold)
             train_em, train_f1 = train_metric['exact'], train_metric['f1']
             train_acc = compute_acc(tr_labels, train_labels)
         else:
-            train_metric = evaluate(dev_gold, tr_results)
-            train_em, train_f1 = tr_metric['exact_match'], tr_metric['f1']
+            train_metric = evaluate(train_gold, tr_results)
+            train_em, train_f1 = train_metric['exact_match'], train_metric['f1']
+            train_acc = -1
 
         # dev eval
         results, labels = predict_squad(model, dev_data, v2_on=args.v2_on)
-        if args.v2_on:
+        if args.v2_on and args.classifier_on:
             metric = evaluate_v2(dev_gold, results, na_prob_thresh=args.classifier_threshold)
             em, f1 = metric['exact'], metric['f1']
             acc = compute_acc(labels, dev_labels)
         else:
             metric = evaluate(dev_gold, results)
             em, f1 = metric['exact_match'], metric['f1']
+            acc = -1
 
 
         output_path = os.path.join(model_dir, 'dev_output_{}.json'.format(epoch))
@@ -191,10 +193,6 @@ def main():
                     test_metric = evaluate(test_gold, test_results)
                     test_em, test_f1 = test_metric['exact_match'], test_metric['f1']
 
-        '''logger.info('#my params epoch : {} , train_loss : {} , train_loss_san : {} , train_loss_class : {} \
-                        , train_em : {} , train_f1 : {} , train_acc : {}\
-                            /n dev_em : {} , dev_f1 : {}, dev_acc : {}'.format(epoch,loss,loss_san,loss_class,train_em,train_f1,train_acc,em,f1,acc))
-        '''
         # setting up scheduler
         if model.scheduler is not None:
             logger.info('scheduler_type {}'.format(opt['scheduler_type']))
@@ -219,21 +217,6 @@ def main():
         --------------------------------
         """)
 
-        '''
-        logger.warning("Epoch {0} - dev EM: {1:.3f} F1: {2:.3f} (best EM: {3:.3f} F1: {4:.3f})\
-                        \nTrain loss: {5:.3f} = {6:.3f} + {7:.3f}"
-                        .format(epoch, em, f1, best_em_score, best_f1_score, loss, loss_san, loss_class))
-        if args.v2_on:
-            logger.warning("Epoch {0} - ACC: {1:.4f}".format(epoch, acc))
-        if metric is not None:
-            logger.warning("Detailed Metric at Epoch {0}: {1}".format(epoch, metric))
-
-        if (test_data is not None) and (test_gold is not None):
-            logger.warning("Epoch {0} - test EM: {1:.3f} F1: {2:.3f}".format(epoch, test_em, test_f1))
-            if args.v2_on:
-                logger.warning("Epoch {0} - test ACC: {1:.4f}".format(epoch, test_acc))
-        '''
-        
         #writing in CSV
         result_params.append([epoch,loss,loss_san,loss_class,em,f1,acc])
         logger.info('Writing in {} the values {}'.format(csv_path,result_params))

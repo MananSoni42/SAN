@@ -81,18 +81,18 @@ class DocReaderModel(object):
         self.network.train()
         if self.opt['cuda']:
             y = Variable(batch['start'].cuda(non_blocking=True)), Variable(batch['end'].cuda(non_blocking=True))
-            if self.opt.get('v2_on', False):
+            if self.opt.get('v2_on', False) and self.opt.get('classifier_on', False):
                 label = Variable(batch['label'].cuda(non_blocking=True), requires_grad=False)
         else:
             y = Variable(batch['start']), Variable(batch['end'])
-            if self.opt.get('v2_on', False):
+            if self.opt.get('v2_on', False) and self.opt.get('classifier_on', False):
                 label = Variable(batch['label'], requires_grad=False)
 
         start, end, pred = self.network(batch)
         loss_san = F.cross_entropy(start, y[0]) + F.cross_entropy(end, y[1]) # SAN loss
         loss = loss_san
-        los_class = None
-        if self.opt.get('v2_on', False):
+        loss_class = None
+        if self.opt.get('v2_on', False) and self.opt.get('classifier_on', False):
             loss_class = F.binary_cross_entropy(pred, torch.unsqueeze(label, 1)) * self.opt.get('classifier_gamma', 1)
             loss += loss_class
 
@@ -139,7 +139,7 @@ class DocReaderModel(object):
             best_idx = np.argpartition(scores, -top_k, axis=None)[-top_k]
             best_score = np.partition(scores, -top_k, axis=None)[-top_k]
             s_idx, e_idx = np.unravel_index(best_idx, scores.shape)
-            if self.opt.get('v2_on', False):
+            if self.opt.get('v2_on', False) and self.opt.get('classifier_on', False):
                 label_score = float(lab[i])
                 s_offset, e_offset = spans[i][s_idx][0], spans[i][e_idx][1]
                 answer = text[i][s_offset:e_offset]

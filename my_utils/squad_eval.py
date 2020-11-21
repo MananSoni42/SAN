@@ -49,7 +49,7 @@ def metric_max_over_ground_truths(metric_fn, prediction, ground_truths):
     for ground_truth in ground_truths:
         score = metric_fn(prediction, ground_truth)
         scores_for_ground_truths.append(score)
-    return max(scores_for_ground_truths)
+    return max(scores_for_ground_truths) if scores_for_ground_truths else 0
 
 def evaluate(dataset, predictions):
     f1 = exact_match = total = 0
