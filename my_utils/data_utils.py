@@ -127,24 +127,25 @@ def feature_func(sample, query_tokend, doc_tokend, vocab, vocab_tag, vocab_ner, 
     start, end, span = build_span(sample['context'], answer, doc_toks, answer_start,
                                     answer_end, is_train=is_train)
     if is_train and (start == -1 or end == -1): return None
-    if not is_train:
-        fea_dict['context'] = sample['context']
-        fea_dict['span'] = span
+    fea_dict['context'] = sample['context']
+    fea_dict['span'] = span
     fea_dict['start'] = start
     fea_dict['end'] = end
     return fea_dict
 
-def build_data(data, vocab, vocab_tag, vocab_ner, fout, is_train, thread=16, NLP=None, v2_on=False):
+def build_data(data, vocab, vocab_tag, vocab_ner, fout, is_train, thread=32, NLP=None, v2_on=False):
     passages = [reform_text(sample['context']) for sample in data]
-    passage_tokened = [doc for doc in NLP.pipe(passages, batch_size=1000, n_threads=thread)]
+    print(len(passages), len(passages)/2048)
+    passage_tokened = [doc for doc in tqdm.tqdm(NLP.pipe(passages, batch_size=2048, n_threads=thread))]
     logger.info('Done with document tokenize')
 
     question_list = [reform_text(sample['question']) for sample in data]
-    question_tokened = [question for question in NLP.pipe(question_list, batch_size=1000, n_threads=thread)]
+    print(len(question_list), len(question_list)/2048)
+    question_tokened = [question for question in tqdm.tqdm(NLP.pipe(question_list, batch_size=2048, n_threads=thread))]
     logger.info('Done with query tokenize')
     dropped_sample = 0
     with open(fout, 'w', encoding='utf-8') as writer:
-        for idx, sample in enumerate(data):
+        for idx, sample in tqdm.tqdm(enumerate(data)):
             if idx % 5000 == 0: logger.info('parse {}-th sample'.format(idx))
             feat_dict = feature_func(sample, question_tokened[idx], passage_tokened[idx], vocab, vocab_tag, vocab_ner, is_train, v2_on)
             if feat_dict is not None:

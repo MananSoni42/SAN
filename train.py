@@ -43,12 +43,11 @@ def main():
     opt = vars(args)
     logger.info('Loading data')
 
-    version = 'v2' if args.v2_on else 'v1.1'
+    version = 'v2' if args.v2_on else 'v1'
     gold_version = 'v2.0' if args.v2_on else 'v1.1'
 
     train_path = gen_name(args.data_dir, args.train_data, version)
-    #train_gold_path  = gen_gold_name(args.data_dir, 'train', gold_version) 
-    
+    train_gold_path = gen_gold_name(args.data_dir, 'train', gold_version)
 
     dev_path = gen_name(args.data_dir, args.dev_data, version)
     dev_gold_path = gen_gold_name(args.data_dir, args.dev_gold, gold_version)
@@ -56,6 +55,7 @@ def main():
     test_path = gen_name(args.data_dir, args.test_data, version)
     test_gold_path = gen_gold_name(args.data_dir, args.test_gold, gold_version)
 
+    train_labels = load_squad_v2_label(train_gold_path)
     dev_labels = load_squad_v2_label(dev_gold_path)
     #train_labels = load_squad_v2_label(train_gold_path)
 
@@ -70,7 +70,6 @@ def main():
                           gpu=args.cuda, is_train=False, elmo_on=args.elmo_on)
 
 
-
     test_data = None
     test_gold = None
 
@@ -80,12 +79,13 @@ def main():
                             gpu=args.cuda, is_train=False, elmo_on=args.elmo_on)
 
     # load golden standard
+    train_gold = load_squad(train_gold_path)
     dev_gold = load_squad(dev_gold_path)
     #train_gold = load_squad(train_gold_path)
 
     if os.path.exists(test_gold_path):
         test_gold = load_squad(test_gold_path)
-    
+
     #define csv path
     csv_head = ['epoch','train_loss','train_loss_san','train_loss_class','dev_em','dev_f1','dev_acc']
     csvfile = 'results_{}.csv'.format(args.classifier_gamma)
@@ -95,7 +95,7 @@ def main():
     #load previous checkpoint
     start_epoch = 0
     state_dict = None
-    
+
     if(args.load_checkpoint !=0):
         start_epoch = args.load_checkpoint + 1
         checkpoint_file = 'checkpoint_{}_epoch_{}.pt'.format(version, args.load_checkpoint)
@@ -105,23 +105,23 @@ def main():
         state_dict = checkpoint['state_dict']
         opt = checkpoint['config']
         #logger.warning('the checkpoint is {}'.format(checkpoint))
-        
+
         #load previous metrics
         with open(csv_path,'r') as csvfile:
             csvreader = csv.reader(csvfile)
             dummy = next(csvreader)
             for row in csvreader:
                 result_params.append(row)
-        
+
         logger.info('Previous metrics loaded')
 
 
 
     model = DocReaderModel(opt, embedding,state_dict)
     # model meta str
-    headline = '############# Model Arch of SAN #############'
+    #headline = '############# Model Arch of SAN #############'
     # print network
-    logger.info('\n{}\n{}\n'.format(headline, model.network))
+    #logger.info('\n{}\n{}\n'.format(headline, model.network))
     model.setup_eval_embed(embedding)
 
     logger.info("Total number of params: {}".format(model.total_param))
@@ -129,7 +129,7 @@ def main():
         model.cuda()
 
     best_em_score, best_f1_score = 0.0, 0.0
-           
+
     for epoch in range(start_epoch, args.epoches):
         logger.warning('At epoch {}'.format(epoch))
 
@@ -148,16 +148,17 @@ def main():
                 logger.info('#updates[{0:6}] train loss[{1:.5f}] remaining[{2}]'.format(
                     model.updates, model.train_loss.avg,
                     str((datetime.now() - start) / (i + 1) * (len(train_data) - i - 1)).split('.')[0]))
-        '''#train eval
-        train_results,train_pred_labels = predict_squad(model,train_data,v2_on=args.v2_on)
+
+        # train eval
+        tr_results, tr_labels = predict_squad(model, train_data, v2_on=args.v2_on)
         if args.v2_on:
-            train_metric = evaluate_v2(train_gold, train_results, na_prob_thresh=args.classifier_threshold)
+            train_metric = evaluate_v2(train_gold, tr_results, na_prob_thresh=args.classifier_threshold)
             train_em, train_f1 = train_metric['exact'], train_metric['f1']
-            train_acc = compute_acc(train_pred_labels, train_labels)
+            train_acc = compute_acc(tr_labels, train_labels)
         else:
-            train_metric = evaluate(dev_gold, results)
-            train_em, train_f1 = train_metric['exact_match'], train_metric['f1']
-        '''
+            train_metric = evaluate(dev_gold, tr_results)
+            train_em, train_f1 = tr_metric['exact_match'], tr_metric['f1']
+
         # dev eval
         results, labels = predict_squad(model, dev_data, v2_on=args.v2_on)
         if args.v2_on:
@@ -172,8 +173,8 @@ def main():
         output_path = os.path.join(model_dir, 'dev_output_{}.json'.format(epoch))
         with open(output_path, 'w') as f:
             json.dump(results, f)
-        
-        
+
+
 
         if test_data is not None:
             test_results, test_labels = predict_squad(model, test_data, v2_on=args.v2_on)
@@ -189,7 +190,7 @@ def main():
                 else:
                     test_metric = evaluate(test_gold, test_results)
                     test_em, test_f1 = test_metric['exact_match'], test_metric['f1']
-        
+
         '''logger.info('#my params epoch : {} , train_loss : {} , train_loss_san : {} , train_loss_class : {} \
                         , train_em : {} , train_f1 : {} , train_acc : {}\
                             /n dev_em : {} , dev_f1 : {}, dev_acc : {}'.format(epoch,loss,loss_san,loss_class,train_em,train_f1,train_acc,em,f1,acc))
@@ -210,6 +211,15 @@ def main():
             best_em_score, best_f1_score = em, f1
             logger.info('Saved the new best model and prediction')
 
+        approx = lambda x: round(x,3)
+
+        logger.warning(f""" Epoch {str(epoch).zfill(2)} ---
+        Train | acc: {approx(train_acc)} EM: {approx(train_em)} F1: {approx(train_f1)} loss ({approx(loss)}) = {approx(loss_san)} + {approx(loss_class)}
+        Dev   | acc: {approx(acc)} EM: {approx(em)} F1: {approx(f1)}
+        --------------------------------
+        """)
+
+        '''
         logger.warning("Epoch {0} - dev EM: {1:.3f} F1: {2:.3f} (best EM: {3:.3f} F1: {4:.3f})\
                         \nTrain loss: {5:.3f} = {6:.3f} + {7:.3f}"
                         .format(epoch, em, f1, best_em_score, best_f1_score, loss, loss_san, loss_class))
@@ -222,7 +232,7 @@ def main():
             logger.warning("Epoch {0} - test EM: {1:.3f} F1: {2:.3f}".format(epoch, test_em, test_f1))
             if args.v2_on:
                 logger.warning("Epoch {0} - test ACC: {1:.4f}".format(epoch, test_acc))
-
+        '''
         
         #writing in CSV
         result_params.append([epoch,loss,loss_san,loss_class,em,f1,acc])

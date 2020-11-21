@@ -159,9 +159,8 @@ class BatchGen:
             if self.gpu:
                 for k, v in batch_dict.items():
                     batch_dict[k] = v.pin_memory()
-            if not self.is_train:
-                batch_dict['text'] = [sample['context'] for sample in batch]
-                batch_dict['span'] = [sample['span'] for sample in batch]
+            batch_dict['text'] = [sample['context'] for sample in batch]
+            batch_dict['span'] = [sample['span'] for sample in batch]
             batch_dict['uids'] = [sample['uid'] for sample in batch]
             self.offset += 1
 
