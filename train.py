@@ -85,8 +85,39 @@ def main():
 
     if os.path.exists(test_gold_path):
         test_gold = load_squad(test_gold_path)
+    
+    #define csv path
+    csv_head = ['epoch','train_loss','train_loss_san','train_loss_class','dev_em','dev_f1','dev_acc']
+    csvfile = 'results_{}.csv'.format(args.classifier_gamma)
+    csv_path = os.path.join(args.data_dir, csvfile)
+    result_params = []
 
-    model = DocReaderModel(opt, embedding)
+    #load previous checkpoint
+    start_epoch = 0
+    state_dict = None
+    
+    if(args.load_checkpoint !=0):
+        start_epoch = args.load_checkpoint + 1
+        checkpoint_file = 'checkpoint_{}_epoch_{}.pt'.format(version, args.load_checkpoint)
+        checkpoint_path = os.path.join(args.model_dir,checkpoint_file)
+        logger.info('path to prev checkpoint is {}'.format(checkpoint_path))
+        checkpoint = torch.load(checkpoint_path)
+        state_dict = checkpoint['state_dict']
+        opt = checkpoint['config']
+        #logger.warning('the checkpoint is {}'.format(checkpoint))
+        
+        #load previous metrics
+        with open(csv_path,'r') as csvfile:
+            csvreader = csv.reader(csvfile)
+            dummy = next(csvreader)
+            for row in csvreader:
+                result_params.append(row)
+        
+        logger.info('Previous metrics loaded')
+
+
+
+    model = DocReaderModel(opt, embedding,state_dict)
     # model meta str
     headline = '############# Model Arch of SAN #############'
     # print network
@@ -98,13 +129,8 @@ def main():
         model.cuda()
 
     best_em_score, best_f1_score = 0.0, 0.0
-
-    csv_head = ['epoch','train_loss','train_loss_san','train_loss_class','dev_em','dev_f1','dev_acc']
-    csvfile = 'results_{}.csv'.format(args.classifier_gamma)
-    csv_path = os.path.join(args.data_dir, csvfile)
-    result_params = []
-    
-    for epoch in range(0, args.epoches):
+           
+    for epoch in range(start_epoch, args.epoches):
         logger.warning('At epoch {}'.format(epoch))
 
         loss, loss_san, loss_class = 0.0, 0.0, 0.0

@@ -166,6 +166,7 @@ def train_config(parser):
     parser.add_argument('--tune_partial', type=int, default=1000, help='finetune top-x embeddings (including <PAD>, <UNK>).')
     parser.add_argument('--model_dir', default='checkpoint')
     parser.add_argument('--seed', type=int, default=2018)
+    parser.add_argument('--load_checkpoint',type=int,default=0)
 
     return parser
 
