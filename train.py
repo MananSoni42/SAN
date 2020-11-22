@@ -87,7 +87,7 @@ def main():
         test_gold = load_squad(test_gold_path)
 
     #define csv path
-    csv_head = ['epoch','train_loss','train_loss_san','train_loss_class','dev_em','dev_f1','dev_acc']
+    csv_head = ['epoch','train_loss','train_loss_san','train_loss_class','dev_em','dev_f1','dev_acc','train_em','train_f1','train_acc']
     csvfile = 'results_{}.csv'.format(args.classifier_gamma)
     csv_path = os.path.join(args.data_dir, csvfile)
     result_params = []
@@ -218,7 +218,7 @@ def main():
         """)
 
         #writing in CSV
-        result_params.append([epoch,loss,loss_san,loss_class,em,f1,acc])
+        result_params.append([epoch,loss,loss_san,loss_class,em,f1,acc,train_em,train_f1,train_acc])
         logger.info('Writing in {} the values {}'.format(csv_path,result_params))
         with open(csv_path,'w') as csvfile:
             csvwriter = csv.writer(csvfile)
