@@ -194,6 +194,7 @@ def main():
                     test_em, test_f1 = test_metric['exact_match'], test_metric['f1']
 
         # setting up scheduler
+        # halves learning rate every 10 epochs
         if model.scheduler is not None:
             logger.info('scheduler_type {}'.format(opt['scheduler_type']))
             if opt['scheduler_type'] == 'rop':

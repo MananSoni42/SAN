@@ -137,9 +137,11 @@ def build_embedding(fname, vocab, dim):
     return emb
 
 def postag_func(toks, vocab):
+    '''return POS tags for specified tokens from the vocabulary'''
     return [vocab[w.tag_] for w in toks if len(w.text) > 0]
 
 def nertag_func(toks, vocab):
+    '''return POS tags for specified tokens from the vocabulary'''
     return [vocab[f'{w.ent_type_}_{w.ent_iob_}'] for w in toks if len(w.text) > 0]
 
 def tok_func(toks, vocab, doc_toks=None):

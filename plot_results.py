@@ -8,9 +8,7 @@ args = parser.parse_args()
 
 lambda_vals = [0.5, 1.0, 10.0]
 
-'''
-Plot acc, em, f1 of joint_san + classifier for different lambdas
-'''
+# Plot acc, em, f1 of joint_san + classifier for different lambdas
 for i,col in enumerate(['dev_acc', 'dev_em', 'dev_f1']):
     plt.gcf().clear()
     plt.title(f' dev {col.split("_")[-1]} for Joint SAN + classifier')
@@ -24,7 +22,7 @@ for i,col in enumerate(['dev_acc', 'dev_em', 'dev_f1']):
     if args.show:
         plt.show()
 
-'''plot training losses for each lambda value'''
+# plot training losses for each lambda value
 for lval in lambda_vals:
     data = pd.read_csv(f'results/jsc_results_{lval}.csv', index_col='epoch')
     plt.gcf().clear()
