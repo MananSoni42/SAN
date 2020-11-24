@@ -18,8 +18,10 @@ Stochastic answering network for Squad 2.0
     * ```get_data.sh```
 
 ### Scripts for running the different modules
-* Download the datasets: ```./get_data.sh```
+* Download the datasets and our model weights: ```./get_data.sh```
 * Pre-process the data ```./preprocess.sh```
 * Train the model ```./train.sh``` (Recommended to use ```train.py``` with correct arguements instead)
 * Evaluate the model ```./evaluate.sh path_to_checkpoint```
 * Plot graphs ```./plot_results.py``` (graphs are stored in plot/)
+* Run the model on a custom sample: ```./predict_sample.py```
+> **NOTE**: To run the last script, put your custom paragraph in paragraph.txt and your questions (1 per line) in questions.txt (samples have been provided in these files)
