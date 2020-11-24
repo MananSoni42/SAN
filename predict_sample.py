@@ -96,7 +96,7 @@ logger.info('Predicting ...')
 results, labels = predict_squad(model, data, v2_on=args.v2_on)
 logger.info('done')
 
-print('\n\n\n------------ Results ------------\n\n')
+print('\n\n\n------------ Results ------------\n')
 print(para, '\n')
 for q in ques:
     print(f'Ques: {q["question"]}')
@@ -104,6 +104,6 @@ for q in ques:
     if results[id]:
         print(f'Ans : {results[id]} (confidence = {round(100*labels[id], 3)} %)')
     else:
-        print('Ans : Could not find')
+        print(f'Ans : Could not find (confidence = {round(100*labels[id], 3)} %)')
     print('\n')
-print('\n---------------------------------\n\n')
+print('---------------------------------\n\n')
