@@ -1,3 +1,8 @@
+'''
+This has been taken from the author's code directly
+We have added comments for our understanding, but otherwise it is unchanged
+'''
+
 import os
 import sys
 import json
@@ -13,6 +18,10 @@ from my_utils.tokenizer import UNK_ID
 #from allennlp.data.token_indexers.elmo_indexer import ELMoCharacterMapper
 
 def load_meta(opt, meta_path):
+    '''
+    Load the meta file (with embeddings)
+    Default file is: data/meta_v2.pick
+    '''
     with open(meta_path, 'rb') as f:
         meta = pkl.load(f)
     embedding = torch.Tensor(meta['embedding'])
@@ -22,6 +31,11 @@ def load_meta(opt, meta_path):
     return embedding, opt
 
 class BatchGen:
+    '''
+    Create mini-batches so that we can use mini batch gradient descent and
+    for faster trainng.
+    Is used by the train.py while training
+    '''
     def __init__(self, data_path, batch_size, gpu, is_train=True, doc_maxlen=1000, dropout_w=0.05, dw_type=0,
                  with_label=False, elmo_on=False):
         self.batch_size = batch_size
@@ -37,7 +51,7 @@ class BatchGen:
 
         if is_train:
             indices = list(range(len(self.data)))
-            random.shuffle(indices)
+            random.shuffle(indices) # randomly shuffle the data (in-place) while training
             data = [self.data[i] for i in indices]
 
         data = [self.data[i:i + batch_size] for i in range(0, len(self.data), batch_size)]
@@ -46,6 +60,10 @@ class BatchGen:
         self.with_label = with_label
 
     def load(self, path, is_train=True, doc_maxlen=1000):
+        '''
+        load the data from the preprocessed data file
+        default is: data/dev_data_v2.json and data/train_data_v2.json
+        '''
         with open(path, 'r', encoding='utf-8') as reader:
             # filter
             data = []
@@ -63,6 +81,9 @@ class BatchGen:
             return data
 
     def reset(self):
+        '''
+        reset the offest pointer and reshuflle the data
+        '''
         if self.is_train:
             indices = list(range(len(self.data)))
             random.shuffle(indices)
@@ -70,6 +91,10 @@ class BatchGen:
         self.offset = 0
 
     def __random_select__(self, arr):
+        '''
+        Randomly marks 5% of words in the paragraph (context) as UNK (unknown)
+        Makes the model more robust
+        '''
         if self.dropout_w > 0:
             if self.dw_type > 0:
                 ids = list(set(arr))
@@ -85,6 +110,9 @@ class BatchGen:
         return len(self.data)
 
     def __iter__(self):
+        '''
+        Create pytorch tensors for the questions, context, answer span and label
+        '''
         while self.offset < len(self):
             batch = self.data[self.offset]
             batch_size = len(batch)
@@ -109,7 +137,7 @@ class BatchGen:
                 query_tok = sample['query_tok']
 
                 if self.is_train:
-                    doc_tok = self.__random_select__(doc_tok)
+                    doc_tok = self.__random_select__(doc_tok) # randomly mark words as UNK during training
                     query_tok = self.__random_select__(query_tok)
 
                 doc_id[i, :doc_select_len] = torch.LongTensor(doc_tok[:doc_select_len])
@@ -121,7 +149,7 @@ class BatchGen:
 
                 query_select_len = min(len(query_tok), query_len)
                 query_id[i, :len(sample['query_tok'])] = torch.LongTensor(query_tok[:query_select_len])
-                if self.elmo_on:
+                if self.elmo_on: # we have not used elmo, this can be ignored
                     doc_ctok = sample['doc_ctok']
                     for j, w in enumerate(batch_to_ids(doc_ctok)[0].tolist()):
                         if j >= doc_select_len:
@@ -137,6 +165,10 @@ class BatchGen:
             doc_mask = torch.eq(doc_id, 0)
             query_mask = torch.eq(query_id, 0)
 
+            '''
+            This parameters are already available in the pre-processed dataset
+            They are just casted to the correct types over here
+            '''
             batch_dict['doc_tok'] = doc_id
             batch_dict['doc_pos'] = doc_tag
             batch_dict['doc_ner'] = doc_ent
@@ -158,7 +190,7 @@ class BatchGen:
 
             if self.gpu:
                 for k, v in batch_dict.items():
-                    batch_dict[k] = v.pin_memory()
+                    batch_dict[k] = v.pin_memory() # yields faster CPU -> GPU data transfer
             batch_dict['text'] = [sample['context'] for sample in batch]
             batch_dict['span'] = [sample['span'] for sample in batch]
             batch_dict['uids'] = [sample['uid'] for sample in batch]

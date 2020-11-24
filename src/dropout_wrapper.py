@@ -1,35 +1,25 @@
 '''
-Created October, 2017
-Author: xiaodl@microsoft.com
+Generic dropout wrapper
+Can be wrapped around any torch layer
 '''
 
 import torch
-import torch.nn as nn
-import torch.nn.functional as F
 from torch.autograd import Variable
 
-class DropoutWrapper(nn.Module):
-    """
-    This is a dropout wrapper which supports the fix mask dropout
-    by: xiaodl
-    """
+class DropoutWrapper(torch.nn.Module):
+    ''' Aply this wrapper to enable dropout on any layer '''
     def __init__(self, dropout_p=0, enable_vbp=True):
         super(DropoutWrapper, self).__init__()
-        """variational dropout means fix dropout mask
-        ref: https://discuss.pytorch.org/t/dropout-for-rnns/633/11
-        """
-        self.enable_variational_dropout = enable_vbp
-        self.dropout_p = dropout_p
+        self.dropout_p = dropout_prob # dropout probability (default = 0.4)
+        self.enable_variational_dropout = enable_vbp # don't use fixed probability dropout
 
     def forward(self, x):
-        """
-            :param x: batch * len * input_size
-        """
-        if self.training == False or self.dropout_p == 0:
+        if self.training == False or not self.dropout_p: # dropout is only applied while training
             return x
 
         if len(x.size()) == 3:
-            mask = Variable(1.0 / (1-self.dropout_p) * torch.bernoulli((1-self.dropout_p) * (x.data.new(x.size(0), x.size(2)).zero_() + 1)), requires_grad=False)
-            return mask.unsqueeze(1).expand_as(x) * x
+            # Bernoulli converts [0,1] -> {0,1} it discretizes the probability 
+            mask = torch.bernoulli((1-self.dropout_p) * Variable(1.0 / (1-self.dropout_p) * (x.data.new(x.size(0), x.size(2)).zero_() + 1)), requires_grad=False) # Use bernoulli distribution to approximate which elements to consider
+            return mask.unsqueeze(1).expand_as(x) * x # set dimensions appropriately
         else:
-            return F.dropout(x, p=self.dropout_p, training=self.training)
+            return torch.nn.functional.dropout(x, p=self.dropout_p, training=self.training)

@@ -1,15 +1,11 @@
 '''
-Lexicon encoding layer
-Created October, 2017
-Author: xiaodl@microsoft.com
+This is the embedding layer
+Although it is called the Lexicon Embedding layer it does contextual embedding as well
 '''
 
 import torch
-import math
 import torch.nn as nn
 from torch.autograd import Variable
-import torch.nn.functional as F
-from torch.nn.utils import weight_norm
 from .recurrent import BRNNEncoder, ContextualEmbed
 from .dropout_wrapper import DropoutWrapper
 from .common import activation

@@ -4,6 +4,10 @@ Created October, 2017
 Author: xiaodl@microsoft.com
 '''
 
+'''
+We have made minor modifications to the author's code
+'''
+
 import torch
 import math
 import torch.nn as nn

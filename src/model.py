@@ -4,7 +4,6 @@ Created October, 2017
 Author: xiaodl@microsoft.com
 '''
 
-
 import torch
 import torch.nn as nn
 import torch.optim as optim
