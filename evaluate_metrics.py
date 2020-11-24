@@ -56,14 +56,10 @@ def main():
 
     dev_gold = load_squad(dev_gold_path)
 
-    state_dict = None
-    if(args.load_checkpoint !=0):
-        start_epoch = args.load_checkpoint + 1
-        checkpoint_file = 'checkpoint_{}_epoch_{}.pt'.format(version, args.load_checkpoint)
-        checkpoint_path = os.path.join(args.model_dir,checkpoint_file)
-        logger.info('path to prev checkpoint is {}'.format(checkpoint_path))
-        checkpoint = torch.load(checkpoint_path, map_location=torch.device('cpu'))
-        state_dict = checkpoint['state_dict']
+    checkpoint_path = args.checkpoint_path
+    logger.info(f'path to given checkpoint is {checkpoint_path}')
+    checkpoint = torch.load(checkpoint_path)
+    state_dict = checkpoint['state_dict']
 
     # Set up the model
     logger.info('Loading model ...')
@@ -95,8 +91,8 @@ def main():
     predicted_labels = np.array(predicted_labels)
 
     # convert from continuous to discrete
-    actual_labels = (actual_labels > args.classifier_threshold)
-    predicted_labels = (predicted_labels > args.classifier_threshold)
+    actual_labels = (actual_labels > args.classifier_threshold).astype(np.int32)
+    predicted_labels = (predicted_labels > args.classifier_threshold).astype(np.int32)
 
     # Print all metrics
     print('accuracy', 100 * sum(abs(predicted_labels-actual_labels)) / len(actual_labels), '%')
