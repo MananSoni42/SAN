@@ -11,14 +11,11 @@ UNK_ID = 1
 STA_ID = 2
 END_ID = 3
 
-version = 'v1'
-def normalize_text(text):
-    return unicodedata.normalize('NFD', text)
+version = 'v2'
+normalize_text = lambda text: unicodedata.normalize('NFD', text)
 
 def reform_text(text):
-    '''
-    Removes unwanted characters from the given text
-    '''
+    '''Remove unwanted characters from the given text'''
     text = re.sub(u'-|¢|¥|€|£|\u2010|\u2011|\u2012|\u2013|\u2014|\u2015|%|\[|\]|:|\(|\)|/',
                 lambda text: ' ' + text.group(0) + ' ', text)
     text = text.strip(' \n')
@@ -26,7 +23,10 @@ def reform_text(text):
     return text
 
 class Vocabulary(object):
-    ''' Class to handle vocabulary conversions (taken from author's code)'''
+    '''
+    Class to handle vocabulary conversions (taken from author's code) (taken from author)
+    Gives token ID of any token or the token corresponding to a given ID
+    '''
     INIT_LEN = 4
     def __init__(self, neat=False):
         self.neat = neat
@@ -64,15 +64,14 @@ class Vocabulary(object):
             raise RuntimeError('Invalid (key, item) types.')
 
     def add(self, token):
-        '''
-        add a single token if it does not exist in Vocab
-        '''
+        '''add a single token if it does not already exist in Vocab'''
         if token not in self.tok2ind:
             index = len(self.tok2ind)
             self.tok2ind[token] = index
             self.ind2tok[index] = token
 
     def get_vocab_list(self, with_order=True):
+        ''' return list of all the tokens in the vocab '''
         if with_order:
             words = [self[k] for k in range(0, len(self))]
         else:
@@ -81,6 +80,7 @@ class Vocabulary(object):
         return words
 
     def toidx(self, tokens):
+        ''' Return list of all token IDS in vocab '''
         return [self[tok] for tok in tokens]
 
     def copy(self):
@@ -90,6 +90,7 @@ class Vocabulary(object):
         return new_vocab
 
     def build(words, neat=False):
+        ''' Build a vocabulary with the given words '''
         vocab = Vocabulary(neat)
         for w in words: vocab.add(w)
         return vocab

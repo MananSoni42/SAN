@@ -1,12 +1,12 @@
 '''
 List all possibilities of linear functions and various weight initializations
+For general use anywhere in the code
 '''
 
 import torch
 
 def linear(x):
     return x
-
 
 act_poss = { # List all possibilities of various activations
     'tanh': torch.nn.functional.tanh,
@@ -20,7 +20,6 @@ act_poss = { # List all possibilities of various activations
 
 def activation(func_name):
     return act_poss[func_name]
-
 
 init_poss = { # List of all possibilites weight initiations
     'uniform': torch.nn.init.uniform,

@@ -1,5 +1,6 @@
 '''
 This is the embedding layer
+Some parts have been taken from the author
 Although it is called the Lexicon Embedding layer it does contextual embedding as well
 '''
 

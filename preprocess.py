@@ -37,7 +37,13 @@ vocab, vocab_tag, vocab_ner = build_vocab(train_data + dev_data, emb_vocab, sort
 # Build the word embeddings using glove vectors for our vocabulary
 emb = build_embedding(fname=path_to_glove, vocab=vocab, dim=EMBED_DIM)
 
-# Make final data and save in data_dir
+# Store embeddings, vocab for later use
+meta_path = os.join.path(args.data_dir, f'{args.meta}_{version}.pick')
+meta = {'vocab': vocab, 'vocab_tag': vocab_tag, 'vocab_ner': vocab_ner, 'embedding': emb}
+with open(meta_path, 'wb') as f:
+    pickle.dump(meta, f)
+
+# Make final data and save in data_dir (default: data/)
 build_data(train_data, vocab, vocab_tag, vocab_ner, os.path.join(data_dir, f'train_data_{version}.json'),
             is_train=True, NLP=NLP)
 build_data(dev_data, vocab, vocab_tag, vocab_ner, os.path.join(data_dir, f'dev_data_{version}.json'),
