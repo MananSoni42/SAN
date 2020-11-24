@@ -7,6 +7,7 @@ import json
 from functools import partial
 from collections import Counter
 from my_utils.tokenizer import Vocabulary, reform_text
+import tqdm
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
@@ -25,11 +26,12 @@ def gen_gold_name(dir, path, version, suffix='json'):
     fname = '{}-{}.{}'.format(path, version, suffix)
     return os.path.join(dir, fname)
 
-def predict_squad(model, data, v2_on=False):
+def predict_squad(model, data, v2_on=True):
     data.reset()
     span_predictions = {}
     label_predictions = {}
-    for batch in data:
+    print(len(data))
+    for batch in tqdm.tqdm(data):
         phrase, spans, scores = model.predict(batch)
         uids = batch['uids']
         for uid, pred in zip(uids, phrase):
