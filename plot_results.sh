@@ -1,1 +1,1 @@
-python3 plot_results.py 
+python plot_results.py --clear --lambda_comp
