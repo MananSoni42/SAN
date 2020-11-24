@@ -8,7 +8,7 @@ import os
 import logging
 import json
 import torch
-from sklearn.metrics import confusion_matrix, average_precision_score, f1_score
+from sklearn.metrics import confusion_matrix, precision_recall_fscore_support
 import numpy as np
 from src.model import DocReaderModel
 from src.batcher import load_meta, BatchGen
@@ -95,10 +95,10 @@ def main():
     predicted_labels = (predicted_labels > args.classifier_threshold).astype(np.int32)
 
     # Print all metrics
-    print('accuracy', 100 * sum(abs(predicted_labels-actual_labels)) / len(actual_labels), '%')
+    print('accuracy', 100 - 100 * sum(abs(predicted_labels-actual_labels)) / len(actual_labels), '%')
     print('confusion matrix', confusion_matrix(predicted_labels, actual_labels))
-    print('average precision recall score', average_precision_score(predicted_labels, actual_labels))
-    print('f1 score', f1_score(predicted_labels, actual_labels))
+    precision, recall, f1, _ = precision_recall_fscore_support(actual_labels, predicted_labels, average='binary')
+    print(f'Precision: {precision} recall: {recall} f1-score: {f1}')
 
 if __name__ == '__main__':
     main()
