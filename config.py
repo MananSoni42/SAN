@@ -168,7 +168,10 @@ def train_config(parser):
     parser.add_argument('--model_dir', default='checkpoint')
     parser.add_argument('--seed', type=int, default=2018)
     parser.add_argument('--load_checkpoint',type=int,default=0)
+
     parser.add_argument('--checkpoint_path',type=str)
+    parser.add_argument('--ques_path', type=str, default='./questions.txt')
+    parser.add_argument('--para_path', type=str, default='./paragraph.txt')
 
     return parser
 

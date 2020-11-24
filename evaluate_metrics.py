@@ -1,7 +1,5 @@
 '''
-Calculates the precision recall score given a model checkpoint
-Must run like below (can change the checkpoint and batch size)
-!python precision_recall.py --classifier_on --v2_on --load_checkpoint 27 --batch_size 128
+Calculates the evaluation metrics given a model checkpoint
 '''
 
 import os
@@ -58,7 +56,7 @@ def main():
 
     checkpoint_path = args.checkpoint_path
     logger.info(f'path to given checkpoint is {checkpoint_path}')
-    checkpoint = torch.load(checkpoint_path)
+    checkpoint = torch.load(checkpoint_path) if args.cuda else torch.load(checkpoint_path, map_location='cpu')
     state_dict = checkpoint['state_dict']
 
     # Set up the model
@@ -72,7 +70,7 @@ def main():
 
     # dev eval
     logger.info('Predicting ...')
-    results, labels = predict_squad(model, dev_data, v2_on=args.classifier_on)
+    results, labels = predict_squad(model, dev_data, v2_on=args.v2_on)
     logger.info('done')
 
     # get actual and predicted labels (as lists)

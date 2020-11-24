@@ -9,15 +9,16 @@ import numpy as np
 
 from .preprocess_utils import *
 
-def load_data(fname, train):
+def load_data(fname, train, data=None):
     '''
     load data from Squad 2.0
     Returns a list of rows, each containing a dictionary with keys:
     uid, context, question, answer, answer_start, answer_end
     '''
     rows = []
-    with open(fname, encoding="utf8") as f:
-        data = json.load(f)['data']
+    if not data:
+        with open(fname, encoding="utf8") as f:
+            data = json.load(f)['data']
 
     print(f'reading from {fname}')
     for article in tqdm(data, total=len(data)):
@@ -195,7 +196,8 @@ def feature_func(sample, query_tokend, doc_tokend, vocab, vocab_tag, vocab_ner, 
     # features
     fea_dict = {}
     fea_dict['uid'] = sample['uid']
-    fea_dict['label'] = sample['label']
+    if is_train:
+        fea_dict['label'] = sample['label']
     fea_dict['query_tok'] = tok_func(query_tokend, vocab)
     fea_dict['query_pos'] = postag_func(query_tokend, vocab_tag)
     fea_dict['query_ner'] = nertag_func(query_tokend, vocab_ner)
