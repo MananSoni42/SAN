@@ -19,15 +19,15 @@ class Classifier(torch.nn.Module):
         # if set the data [x, y] will be augmented to [x, y, |x-y|, x*y]
         self.merge_opt = opt.get(f'{prefix}_merge_opt', 0)
 
-        x_aug_size = 4 if self.merge_opt else 2
-        self.project = torch.nn.Linear(x_aug_size)
+        aug_size = 4 if self.merge_opt else 2
+        self.project = torch.nn.Linear(x_size*aug_size, y_size)
 
         # apply weight normalization
         if opt.get(f'{prefix}_weight_norm_on', False):
-            self.proj = torch.nn.utils.weight_norm(self.proj)
+            self.project = torch.nn.utils.weight_norm(self.project)
 
     def forward(self, x1, x2, mask=None):
         x_inp = [x1, x2, (x1 - x2).abs(), x1 * x2] if self.merge_opt else [x1, x2]
         x = torch.cat(x_inp, 1)
         x = self.dropout(x)
-        return self.proj(x)# results of the linear layer (with or without augmentation)
+        return self.project(x)# results of the linear layer (with or without augmentation)
