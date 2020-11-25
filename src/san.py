@@ -21,6 +21,9 @@ from src.dropout_wrapper import DropoutWrapper
 SMALL_POS_NUM=1.0e-30
 
 def generate_mask(new_data, dropout_p=0.0, is_training=False):
+    '''
+    Stochastically drops a few data points to make model robust 
+    '''
     if not is_training: dropout_p = 0.0
     new_data = (1-dropout_p) * (new_data.zero_() + 1)
     for i in range(new_data.size(0)):
@@ -30,6 +33,9 @@ def generate_mask(new_data, dropout_p=0.0, is_training=False):
     return mask
 
 class SAN(nn.Module):
+    '''
+    Putting togeather SAN model
+    '''
     def __init__(self, x_size, h_size, opt={}, prefix='answer', dropout=None):
         super(SAN, self).__init__()
         self.prefix = prefix

@@ -11,6 +11,9 @@ from torch.nn.utils.rnn import pack_padded_sequence as pack
 from .my_optim import weight_norm as WN
 
 class OneLayerBRNN(nn.Module):
+    '''
+    Defines Bi--directional RNN 
+    '''
     def __init__(self, input_size, hidden_size, prefix='stack_rnn', opt={}, dropout=None):
         super(OneLayerBRNN, self).__init__()
         self.opt = opt
@@ -72,6 +75,9 @@ class BRNNEncoder(nn.Module):
 # Credit from: https://github.com/salesforce/cove
 #------------------------------
 class ContextualEmbedV2(nn.Module):
+    '''
+    Class to implement Contextual Embedding layer (version 2)
+    '''
     #constructor
     def __init__(self,model_path,padding_idx=0):
         super(ContextualEmbedV2,self).__init__() # can use super().__init__
@@ -139,6 +145,9 @@ class ContextualEmbedV2(nn.Module):
 
 
 class ContextualEmbed(nn.Module):
+    '''
+    Class to implement Contextual Embedding layer version 1
+    '''
     def __init__(self, path, vocab_size, emb_dim=300, embedding=None, padding_idx=0):
         super(ContextualEmbed, self).__init__()  # can use super().__init__
 

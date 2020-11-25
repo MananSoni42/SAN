@@ -4,6 +4,10 @@ Created October, 2017
 Author: xiaodl@microsoft.com
 '''
 
+'''
+We have made minor modifications to the author's code
+'''
+
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -21,6 +25,9 @@ from .dreader import DNetwork
 logger = logging.getLogger(__name__)
 
 class DocReaderModel(object):
+    '''
+    Class to put the entire model in the place
+    '''
     def __init__(self, opt, embedding=None, state_dict=None):
         self.opt = opt
         self.updates = state_dict['updates'] if state_dict and 'updates' in state_dict else 0
@@ -28,6 +35,7 @@ class DocReaderModel(object):
         self.train_loss = AverageMeter()
 
         self.network = DNetwork(opt, embedding)
+        #reload checkpoint parameters if state dictionary passed
         if state_dict:
             new_state = set(self.network.state_dict().keys())
             for k in list(state_dict['network'].keys()):
@@ -37,7 +45,7 @@ class DocReaderModel(object):
                 if k not in state_dict['network']:
                     state_dict['network'][k] = v
             self.network.load_state_dict(state_dict['network'])
-
+        #select optimizer
         parameters = [p for p in self.network.parameters() if p.requires_grad]
         if opt['optimizer'] == 'sgd':
             self.optimizer = optim.SGD(parameters, opt['learning_rate'],
@@ -77,6 +85,7 @@ class DocReaderModel(object):
         self.total_param = sum([p.nelement() for p in parameters]) - wvec_size
 
     def update(self, batch):
+        '''updates parameters and calculates,returns losses '''
         self.network.train()
         if self.opt['cuda']:
             y = Variable(batch['start'].cuda(non_blocking=True)), Variable(batch['end'].cuda(non_blocking=True))
@@ -107,6 +116,10 @@ class DocReaderModel(object):
         return loss, loss_san, loss_class
 
     def predict(self, batch, top_k=1):
+        '''
+        Function to predict labels and returns best k answers
+        '''
+
         self.network.eval()
         self.network.drop_emb = False
         # Transfer trained embedding to evaluation embedding
@@ -183,6 +196,9 @@ class DocReaderModel(object):
                     = self.network.lexicon_encoder.fixed_embedding
 
     def save(self, filename, epoch):
+        '''
+        Saves the checkpoints for reload if required
+        '''
         network_state = dict([(k, v) for k, v in self.network.state_dict().items() if k[0:4] != 'CoVe'])
         if 'eval_embed.weight' in network_state:
             del network_state['eval_embed.weight']

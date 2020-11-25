@@ -2,6 +2,9 @@
 Created October, 2017
 Author: xiaodl@microsoft.com
 '''
+'''
+we made minor modifications to the authors code
+'''
 
 import torch
 import torch.nn as nn
@@ -14,6 +17,7 @@ from .common import init_wrapper
 from .dropout_wrapper import DropoutWrapper
 
 class DotProduct(nn.Module):
+    '''Used in Similarity Wrapper'''
     def __init__(self, x1_dim, x2_dim, prefix='sim', opt={}, dropout=None):
         super(DotProduct, self).__init__()
         assert x1_dim == x2_dim
@@ -31,6 +35,7 @@ class DotProduct(nn.Module):
 
 
 class DotProductProject(nn.Module):
+    '''Used in Similarity Wrapper'''
     def __init__(self, x1_dim, x2_dim, prefix='sim', opt={}, dropout=None):
         super(DotProductProject, self).__init__()
         self.prefix = prefix
@@ -78,6 +83,7 @@ class DotProductProject(nn.Module):
 
 
 class Bilinear(nn.Module):
+    '''Used in Similarity Wrapper'''
     def __init__(self, x1_dim, x2_dim, prefix='sim', opt={}, dropout=None):
         super(Bilinear, self).__init__()
         self.opt = opt
@@ -103,6 +109,7 @@ class Bilinear(nn.Module):
 
 
 class BilinearSum(nn.Module):
+    '''Used in Similarity Wrapper'''
     def __init__(self, x1_dim, x2_dim, prefix='sim', opt={}, dropout=None):
         super(BilinearSum, self).__init__()
         self.x_linear = nn.Linear(x1_dim, 1, bias=False)
@@ -166,6 +173,9 @@ class Trilinear(nn.Module):
 
 
 class SimilarityWrapper(nn.Module):
+    '''
+    Similarity wrapper to compute diff scores
+    '''
     def __init__(self, x1_dim, x2_dim, prefix='attention', opt={}, dropout=None):
         super(SimilarityWrapper, self).__init__()
         self.score_func_str = opt.get('{}_sim_func'.format(prefix), 'dotproductproject').lower()
@@ -189,6 +199,9 @@ class SimilarityWrapper(nn.Module):
 
 
 class AttentionWrapper(nn.Module):
+    '''
+    Implements attention for any layer 
+    '''
     def __init__(self, x1_dim, x2_dim, prefix='attention', opt={}, dropout=None):
         super(AttentionWrapper, self).__init__()
         self.prefix = prefix
@@ -220,6 +233,9 @@ class AttentionWrapper(nn.Module):
 
 
 class LinearSelfAttn(nn.Module):
+    '''
+    Implements self attention
+    '''
     def __init__(self, input_size, dropout=None):
         super(LinearSelfAttn, self).__init__()
         self.linear = nn.Linear(input_size, 1)

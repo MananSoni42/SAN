@@ -33,6 +33,9 @@ def _dummy(*args, **kwargs):
 
 
 class WeightNorm(torch.nn.Module):
+    '''
+    Functions to Normalize the weights for a specific layer
+    '''
 
     def __init__(self, weights, dim):
         super(WeightNorm, self).__init__()
