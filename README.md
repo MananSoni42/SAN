@@ -18,7 +18,9 @@ Stochastic answering network for Squad 2.0
     * ```get_data.sh```
 
 ### Scripts for running the different modules
-* Download the datasets and our model weights: ```./get_data.sh```
+> **NOTE**: You must run the get_data.sh script completely to execute any of the other Scripts
+
+* Download the datasets and our model weights: ```./get_data.sh``` (~3.5 GB)
 * Pre-process the data ```./preprocess.sh```
 * Train the model ```./train.sh``` (Recommended to use ```train.py``` with correct arguements instead)
 * Evaluate the model ```./evaluate.sh path_to_checkpoint```

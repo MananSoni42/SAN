@@ -30,5 +30,5 @@ wget https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_
 wget https://s3-us-west-2.amazonaws.com/allennlp/models/elmo/2x4096_512_2048cnn_2xhighway_5.5B/elmo_2x4096_512_2048cnn_2xhighway_5.5B_options.json -O $DATA_DIR/elmo_2x4096_512_2048cnn_2xhighway_5.5B_options.json
 
 # Download our trained model weights and other relevant files
-./gdown.pl https://drive.google.com/file/d/16MppGhSBicpeezvFm-xMIivlRec-jffd/view?usp=sharing ./data/lambda_1.5_epoch_49.pt
+./gdown.pl https://drive.google.com/file/d/12QSPATH6iHp3CGNN1IKdT26gbv9d48GR/view?usp=sharing ./data/lambda_1.5_epoch_49.pt
 ./gdown.pl https://drive.google.com/file/d/1-RRnvRkBDVR9xD5eEM2qePGOqp2yLPfn/view?usp=sharing ./data/meta_v2.pick
