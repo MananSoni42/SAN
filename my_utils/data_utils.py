@@ -1,3 +1,10 @@
+'''
+helper functions for getting accuracy,
+predicting values,span detection,
+tagging words
+
+'''
+
 import re
 import os
 import numpy as np
@@ -7,10 +14,11 @@ import json
 from functools import partial
 from collections import Counter
 from my_utils.tokenizer import Vocabulary, reform_text
-import tqdm
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
 
+
+#for calculating accuracy
 def compute_acc(score_list, gold, threshold=0.5):
     correct = 0
     for key, val in score_list.items():
@@ -18,6 +26,7 @@ def compute_acc(score_list, gold, threshold=0.5):
         if lab == gold[key]: correct += 1
     return correct * 100.0 / len(gold)
 
+#for generating name
 def gen_name(dir, path, version, suffix='json'):
     fname = '{}_{}.{}'.format(path, version, suffix)
     return os.path.join(dir, fname)
@@ -26,12 +35,12 @@ def gen_gold_name(dir, path, version, suffix='json'):
     fname = '{}-{}.{}'.format(path, version, suffix)
     return os.path.join(dir, fname)
 
-def predict_squad(model, data, v2_on=True):
+#for predicting 
+def predict_squad(model, data, v2_on=False):
     data.reset()
     span_predictions = {}
     label_predictions = {}
-    print(len(data))
-    for batch in tqdm.tqdm(data):
+    for batch in data:
         phrase, spans, scores = model.predict(batch)
         uids = batch['uids']
         for uid, pred in zip(uids, phrase):
@@ -54,6 +63,7 @@ def load_squad_v2_label(path):
                 rows[uid] = label
     return rows
 
+#below functions used for different types of tagging
 def postag_func(toks, vocab):
     return [vocab[w.tag_] for w in toks if len(w.text) > 0]
 
@@ -79,6 +89,7 @@ def match_func(question, context):
     features = np.asarray([freq, match_origin, match_lower, match_lemma], dtype=np.float32).T.tolist()
     return features
 
+#used for getting span of the answeres
 def build_span(context, answer, context_token, answer_start, answer_end, is_train=True):
     p_str = 0
     p_token = 0
@@ -104,8 +115,9 @@ def build_span(context, answer, context_token, answer_start, answer_end, is_trai
     else:
         return (t_start, t_end, t_span)
 
+
 def feature_func(sample, query_tokend, doc_tokend, vocab, vocab_tag, vocab_ner, is_train, v2_on=False):
-    # features
+    
     fea_dict = {}
     fea_dict['uid'] = sample['uid']
     if v2_on and is_train:
@@ -135,6 +147,7 @@ def feature_func(sample, query_tokend, doc_tokend, vocab, vocab_tag, vocab_ner, 
     fea_dict['end'] = end
     return fea_dict
 
+# used for building data
 def build_data(data, vocab, vocab_tag, vocab_ner, fout, is_train, thread=32, NLP=None, v2_on=False):
     passages = [reform_text(sample['context']) for sample in data]
     print(len(passages), len(passages)/2048)

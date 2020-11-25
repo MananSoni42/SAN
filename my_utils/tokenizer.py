@@ -1,6 +1,5 @@
 '''
-Created October, 2017
-Author: xiaodl@microsoft.com
+tokenizing
 '''
 import re
 import warnings
@@ -23,6 +22,7 @@ UNK_ID = 1
 STA_ID = 2
 END_ID = 3
 
+#used in mapping
 DigitsMapper = {'0': 'zero', '1': 'one', '2': 'two', '3': 'three', '4': 'four', '5': 'five', '6': 'six', '7': 'seven', '8': 'eight', '9': 'nine', '10': 'ten',
                 'zero': '0', 'one': '1', 'two': '2', 'three': '3', 'four': '4', 'five': '5', 'six': '6', 'seven': '7','eight': '8', 'nine': '9', 'ten': '10'}
 
@@ -50,6 +50,8 @@ def reform_text(text):
     text = re.sub('\s+', ' ', text)
     return text
 
+
+#for creating vocabulary
 class Vocabulary(object):
     INIT_LEN = 4
     def __init__(self, neat=False):
@@ -115,6 +117,7 @@ class Vocabulary(object):
         for w in words: vocab.add(w)
         return vocab
 
+#for building vocabularies
 def build_vocab(data, glove_vocab=None, sort_all=False, thread=24, clean_on=False, cl_on=True):
     if cl_on:
         nlp = spacy.load('en', disable=['vectors', 'textcat', 'parser'])

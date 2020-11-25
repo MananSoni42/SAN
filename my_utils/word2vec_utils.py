@@ -1,12 +1,13 @@
 '''
 GloVe embedding functions
-Created June, 2017
-Author: xiaodl@microsoft.com
+creating and loading
+
 '''
 
 import numpy as np
 from .tokenizer import normalize_text
 
+#function for loading the embeddings
 def load_emb_vocab(path, dim=300, fast_vec_format=False):
     vocab = set()
     with open(path, encoding='utf-8') as f:
@@ -20,6 +21,8 @@ def load_emb_vocab(path, dim=300, fast_vec_format=False):
             vocab.add(token)
     return vocab
 
+
+#function for buiding word embeddings
 def build_embedding(path, vocab, dim=300, fast_vec_format=False):
     """Support fasttext format"""
     vocab_size = len(vocab)

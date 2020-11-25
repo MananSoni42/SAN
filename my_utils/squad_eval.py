@@ -1,5 +1,7 @@
-""" Official evaluation script for v1.1 of the SQuAD dataset.
-Credit from: https://worksheets.codalab.org/rest/bundles/0xbcd57bee090b421c982906709c8c27e1/contents/blob/
+"""
+For calculating Evaluation metrics
+namely EM score and F1-score
+for v1
 """
 from __future__ import print_function
 from collections import Counter
@@ -9,8 +11,9 @@ import argparse
 import json
 import sys
 
+# used for normalizing 
 def normalize_answer(s):
-    """Lower text and remove punctuation, articles and extra whitespace."""
+    """Lowers text and remove punctuation, articles and extra whitespace."""
     def remove_articles(text):
         return re.sub(r'\b(a|an|the)\b', ' ', text)
 
@@ -26,7 +29,7 @@ def normalize_answer(s):
 
     return white_space_fix(remove_articles(remove_punc(lower(s))))
 
-
+# helper function for calculating F1-score
 def f1_score(prediction, ground_truth):
     prediction_tokens = normalize_answer(prediction).split()
     ground_truth_tokens = normalize_answer(ground_truth).split()
@@ -39,7 +42,7 @@ def f1_score(prediction, ground_truth):
     f1 = (2 * precision * recall) / (precision + recall)
     return f1
 
-
+#helper function for calculating EM-score
 def exact_match_score(prediction, ground_truth):
     return (normalize_answer(prediction) == normalize_answer(ground_truth))
 
@@ -51,6 +54,7 @@ def metric_max_over_ground_truths(metric_fn, prediction, ground_truths):
         scores_for_ground_truths.append(score)
     return max(scores_for_ground_truths) if scores_for_ground_truths else 0
 
+# returns Em Score and F1 score
 def evaluate(dataset, predictions):
     f1 = exact_match = total = 0
     for article in dataset:

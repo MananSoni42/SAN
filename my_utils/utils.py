@@ -4,7 +4,7 @@ import numpy
 
 class AverageMeter(object):
     """Computes and stores the average and current value."""
-    # adapted from: https://github.com/facebookresearch/DrQA
+
     def __init__(self):
         self.reset()
 
@@ -20,6 +20,7 @@ class AverageMeter(object):
         self.count += n
         self.avg = self.sum / self.count
 
+#for setting GPU (environment variables)
 def set_environment(seed, set_cuda=False):
     random.seed(seed)
     numpy.random.seed(seed)
