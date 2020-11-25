@@ -21,15 +21,15 @@ The Stochastic Answer network is one of the state-of-the art models for Machine 
 
 ## Results
 
-|    Lambda value    |       Model type       | Epochs | Train accuracy | Train EM score | Train F1 score | Dev accuracy | Dev EM score | Dev F1 score |
-|:------------------:|:----------------------:|:------:|:--------------:|:--------------:|:--------------:|:------------:|:------------:|:------------:|
-|         0.5        | Joint SAN + classifier |   50   |        -       |        -       |        -       |     70.34    |     62.63    |    65..75    |
-|         1.0        | Joint SAN + classifier |   28   |      86.27     |      70.17     |      76.73     |     68.69    |     59.93    |     63.17    |
-|         1.0        |        Joint SAN       |   31   |       NA       |      45.91     |      53.47     |      NA      |     34.28    |     38.11    |
-|        10.0        | Joint SAN + classifier |   50   |      92.53     |       73.17    |       80.79    |     68.47    |     59.30    |     62.84    |
-|        10.0        |        Joint SAN       |   21   |       NA       |      44.83     |      52.38     |      NA      |     33.61    |     36.85    |
-| 1.5 (best results) | Joint SAN + classifier |   50   |      92.96     |      79.10     |      85.61     |     70.55    |     60.58    |     63.46    |
-| 1.5 (best results) |        Joint SAN       |   50   |       NA       |      78.37     |      84.88     |      NA      |     61.18    |     64.39    |
+| Lambda value | Model type | Epochs | Train accuracy | Train EM score | Train F1 score | Dev accuracy | Dev EM score | Dev F1 score |
+|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| 0.5  | Joint SAN + classifier | 50 | -         | -     | -     | 70.34 | 62.63     | 65.75     |
+| 1.0  | Joint SAN + classifier | 47 | 91.42     | 77.52 | 83.86 | 70.09 | **61.24** | **64.45** |
+| 1.0  | Joint SAN             | 31 | NA        | 45.91 | 53.47 | NA    | 34.28     | 38.11     |
+| 1.5  | Joint SAN + classifier | 50 | **92.96** | 79.10 | 85.61 | 70.55 | 60.58     | 63.46     |
+| 1.5  | Joint SAN             | 50 | NA        | 78.37 | 84.88 | NA    | 61.18     | 64.39     |
+| 10.0 | Joint SAN + classifier | 50 | 92.53     |73.17  | 80.79 | 68.47 | 59.30     | 62.84     |
+| 1.5  | Joint SAN             | 21 | NA        | 44.83 | 52.38 | NA    | 33.61     | 36.85     |
 
 ## Examples
 ![Example 1 paragraph](assets/ex1p.png)
@@ -69,6 +69,7 @@ The Stochastic Answer network is one of the state-of-the art models for Machine 
 * Evaluate the model ```./evaluate.sh path_to_checkpoint```
 * Plot graphs ```./plot_results.py``` (graphs are stored in plot/)
 * Run the model on a custom sample: ```./predict_sample.py```
+
 > **NOTE**: To run the last script, put your custom paragraph in paragraph.txt and your questions (1 per line) in questions.txt (samples have been provided in these files)
 
 ## Contributing
