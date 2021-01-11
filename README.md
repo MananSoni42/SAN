@@ -32,8 +32,11 @@ The Stochastic Answer network is one of the state-of-the art models for Machine 
 | 1.5  | Joint SAN             | 21 | NA        | 44.83 | 52.38 | NA    | 33.61     | 36.85     |
 
 ## Examples
+1. 
 ![Example 1 paragraph](assets/ex1p.png)
 ![Example 1 QA](assets/ex1qa.png)
+
+2. 
 ![Example 2 paragraph](assets/ex2p.png)
 ![Example 2 QA](assets/ex2qa.png)
 
